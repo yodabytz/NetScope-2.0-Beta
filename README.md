@@ -70,8 +70,15 @@ Left Arrow or Backspace: Return to the main menu.
 q: Quit the application.
 ```
 
-## License
+## License:
 ```This project is licensed under the MIT License. See the LICENSE file for details.```
 
-## Author
+## Author:
 ```NetScope 2.0 is developed by Yodabytz. Contributions and feedback are welcome!```
+
+## To Do:
+```
+1) Add more features on the running processes screen
+2) get CPU usage down more
+
+If you have any feature request, let me know```
