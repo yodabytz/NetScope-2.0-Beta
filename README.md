@@ -79,7 +79,7 @@ q: Quit the application.
 ## To Do:
 ```
 1) Add more features on the running processes screen
-2) get CPU usage down more
+2) get CPU usage down more (fixed)
 
-If you have any feature request, let me know
+If you have any feature requests, let me know
 ```
