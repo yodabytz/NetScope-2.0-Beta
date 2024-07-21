@@ -176,7 +176,7 @@ def main_screen(stdscr, selected_option):
     proc_start_idx = 0
     proc_selected_idx = 0
     active_section = "ESTABLISHED"
-    stdscr.timeout(500)
+    stdscr.timeout(1000)  # Increase timeout to reduce CPU usage
 
     established_connections = []
     listening_connections = []
@@ -185,9 +185,13 @@ def main_screen(stdscr, selected_option):
     # Adjusted minimum width for Both screen
     min_width = 135
 
-    def update_display():
-        nonlocal established_connections, listening_connections, processes
+    def fetch_connections():
+        return get_connections('ESTABLISHED'), get_connections('LISTEN')
 
+    def fetch_processes():
+        return get_all_processes()
+
+    def update_display(established_connections, listening_connections, processes):
         max_y, max_x = stdscr.getmaxyx()
 
         if max_x < min_width:
@@ -202,24 +206,18 @@ def main_screen(stdscr, selected_option):
         buffer.bkgd(curses.color_pair(1))
         buffer.erase()
 
-        if selected_option in [1, 3]:
-            established_connections = get_connections('ESTABLISHED')
-        if selected_option in [2, 3]:
-            listening_connections = get_connections('LISTEN')
-        if selected_option == 4:
-            processes = get_all_processes()
-
         io_data = {}
         for conn in established_connections + listening_connections:
             pid = conn[3].strip()
             if pid and pid.isdigit():
                 pid = int(pid)
-                try:
-                    p = psutil.Process(pid)
-                    io_counters = p.io_counters()
-                    io_data[pid] = {'sent': io_counters.write_bytes, 'recv': io_counters.read_bytes}
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    io_data[pid] = {'sent': 0, 'recv': 0}
+                if pid not in io_data:
+                    try:
+                        p = psutil.Process(pid)
+                        io_counters = p.io_counters()
+                        io_data[pid] = {'sent': io_counters.write_bytes, 'recv': io_counters.read_bytes}
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        io_data[pid] = {'sent': 0, 'recv': 0}
 
         buffer.erase()
         buffer.bkgd(curses.color_pair(1))
@@ -258,7 +256,12 @@ def main_screen(stdscr, selected_option):
             if selected_option == 5:
                 break
 
-            update_display()
+            if selected_option in [1, 2, 3]:
+                established_connections, listening_connections = fetch_connections()
+            if selected_option == 4:
+                processes = fetch_processes()
+
+            update_display(established_connections, listening_connections, processes)
             stdscr.refresh()
 
             max_y, max_x = stdscr.getmaxyx()
