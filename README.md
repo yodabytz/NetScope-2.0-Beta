@@ -81,4 +81,5 @@ q: Quit the application.
 1) Add more features on the running processes screen
 2) get CPU usage down more
 
-If you have any feature request, let me know```
+If you have any feature request, let me know
+```
