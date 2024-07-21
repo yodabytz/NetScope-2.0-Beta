@@ -89,19 +89,43 @@ def splash_screen(stdscr, selected=0):
     curses.curs_set(0)
     max_y, max_x = stdscr.getmaxyx()
 
+    min_width = 135  # Adjust the minimum width here
+
+    while max_x < min_width:
+        stdscr.clear()
+        stdscr.addstr(0, 0, f"Please resize your window to at least {min_width} columns.", curses.color_pair(2) | curses.A_BOLD)
+        stdscr.refresh()
+        time.sleep(0.5)
+        max_y, max_x = stdscr.getmaxyx()
+
     stdscr.bkgd(curses.color_pair(1))
     stdscr.clear()
     stdscr.refresh()
 
     title = "NetScope 2.0"
+    ascii_art = [
+        "ooooo      ooo               .    .oooooo..o                                          ",
+        "`888b.     `8'             .o8   d8P'    `Y8                                          ",
+        " 8 `88b.    8   .ooooo.  .o888oo Y88bo.       .ooooo.   .ooooo.  oo.ooooo.   .ooooo.  ",
+        " 8   `88b.  8  d88' `88b   888    `\"Y8888o.  d88' `\"Y8 d88' `88b  888' `88b d88' `88b ",
+        " 8     `88b.8  888ooo888   888        `\"Y88b 888       888   888  888   888 888ooo888 ",
+        " 8       `888  888    .o   888 . oo     .d8P 888   .o8 888   888  888   888 888    .o ",
+        "o8o        `8  `Y8bod8P'   \"888\" 8\"\"88888P'  `Y8bod8P' `Y8bod8P'  888bod8P' `Y8bod8P' ",
+        "                                                                  888                 ",
+        "                                                                 o888o                "
+    ]
     prompt = "Select an option:"
     options = ["1. Established Connections", "2. Listening Connections", "3. Both", "4. Running Processes", "5. Exit"]
     title_x = max_x // 2 - len(title) // 2
-    options_y_start = max_y // 2 - len(options) // 2
+    ascii_start_y = max_y // 4
+    options_y_start = max_y // 2 + 4
     prompt_x = max_x // 2 - len(prompt) // 2
     prompt_y = options_y_start - 2
 
     stdscr.addstr(1, title_x, title, curses.color_pair(2) | curses.A_BOLD)
+    for i, line in enumerate(ascii_art):
+        stdscr.addstr(ascii_start_y + i, (max_x - len(line)) // 2, line, curses.color_pair(2))
+
     stdscr.addstr(prompt_y, prompt_x, prompt, curses.color_pair(2))
 
     for idx, option in enumerate(options):
@@ -154,11 +178,12 @@ def main_screen(stdscr, selected_option):
     active_section = "ESTABLISHED"
     stdscr.timeout(500)
 
-    min_width = 100
-
     established_connections = []
     listening_connections = []
     processes = []
+
+    # Adjusted minimum width for Both screen
+    min_width = 135
 
     def update_display():
         nonlocal established_connections, listening_connections, processes
