@@ -45,7 +45,7 @@ Run the tool by typing:
 netscope
 
 ## Controls
-Menu Navigation:
+```Menu Navigation:
 
 Up/Down Arrows or k/j: Navigate through the menu options.
 Enter or Return: Select a menu option.
@@ -66,10 +66,10 @@ Running Processes Screen:
 Up/Down Arrows or k/j: Scroll through the list of processes.
 k: Kill the selected process.
 Left Arrow or Backspace: Return to the main menu.
-q: Quit the application.
+q: Quit the application.```
 
-##License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## License
+```This project is licensed under the MIT License. See the LICENSE file for details.```
 
 ## Author
-NetScope 2.0 is developed by Yodabytz. Contributions and feedback are welcome!
+```NetScope 2.0 is developed by Yodabytz. Contributions and feedback are welcome!```
