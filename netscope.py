@@ -45,12 +45,12 @@ def get_all_processes():
         user = proc.info['username'].ljust(15)
         nice = str(proc.info['nice']).ljust(5)
         memory_info = proc.info['memory_info']
-        memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(5)
-        cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(5)
-        status = proc.info['status'].ljust(5)
-        virt = format_size(memory_info.vms).ljust(8) if memory_info else "N/A".ljust(8)
-        res = format_size(memory_info.rss).ljust(8) if memory_info else "N/A".ljust(8)
-        shr = format_size(memory_info.shared).ljust(8) if memory_info else "N/A".ljust(8)
+        memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(6)
+        cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(6)
+        status = proc.info['status'].ljust(6)
+        virt = format_size(memory_info.vms).ljust(10) if memory_info else "N/A".ljust(10)
+        res = format_size(memory_info.rss).ljust(10) if memory_info else "N/A".ljust(10)
+        shr = format_size(memory_info.shared).ljust(10) if memory_info else "N/A".ljust(10)
         cpu_time = f"{proc.info['cpu_times'].user:.2f}".ljust(8)
         command = proc.info['name'].ljust(20)
         processes.append([pid, user, nice, virt, res, shr, status, cpu_percent, memory_percent, cpu_time, command])
@@ -76,11 +76,11 @@ def draw_process_table(window, title, processes, start_y, start_x, width, start_
 
     window.addstr(start_y, start_x, title, title_color)
     headers = ["PID", "USER", "NI", "VIRT", "RES", "SHR", "S", "CPU%", "MEM%", "TIME+", "Command"]
-    window.addstr(start_y + 1, start_x, ' '.join(f'{header:8}' if i == 0 else f'{header:15}' if i == 1 else f'{header:5}' if i == 2 else f'{header:8}' for i, header in enumerate(headers)), header_color)
+    window.addstr(start_y + 1, start_x, ' '.join(f'{header:8}' if i == 0 else f'{header:15}' if i == 1 else f'{header:5}' if i == 2 else f'{header:10}' for i, header in enumerate(headers)), header_color)
 
     for i, proc in enumerate(processes[start_idx:start_idx + max_lines]):
         color = selected_color if i + start_idx == selected_idx else text_color
-        window.addstr(start_y + 2 + i, start_x, ' '.join(f'{str(field):8}' if j == 0 else f'{str(field):15}' if j == 1 else f'{str(field):5}' if j == 2 else f'{str(field):8}' for j, field in enumerate(proc)), color)
+        window.addstr(start_y + 2 + i, start_x, ' '.join(f'{str(field):8}' if j == 0 else f'{str(field):15}' if j == 1 else f'{str(field):5}' if j == 2 else f'{str(field):10}' for j, field in enumerate(proc)), color)
 
 def splash_screen(stdscr, selected=0):
     curses.start_color()
@@ -124,7 +124,7 @@ def splash_screen(stdscr, selected=0):
 
     stdscr.addstr(1, title_x, title, curses.color_pair(2) | curses.A_BOLD)
     for i, line in enumerate(ascii_art):
-        stdscr.addstr(ascii_start_y + i, (max_x - len(line)) // 2, line, curses.color_pair(2))
+        stdscr.addstr(ascii_start_y + i, (max_x - len(line)) // 2, line, curses.color_pair(2) | curses.A_BOLD)
 
     stdscr.addstr(prompt_y, prompt_x, prompt, curses.color_pair(2))
 
@@ -271,18 +271,18 @@ def main_screen(stdscr, selected_option):
                 elif key == curses.KEY_DOWN:
                     est_start_idx = min(est_start_idx + 1, len(established_connections) - max_lines)
                 elif key == ord('q'):
-                    return 5  # To quit the program
+                    return 5, selected_option  # To quit the program
                 elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                    return 0  # Navigate back to the main menu
+                    return 0, selected_option  # Navigate back to the main menu
             elif selected_option == 2:
                 if key == curses.KEY_UP:
                     listen_start_idx = max(listen_start_idx - 1, 0)
                 elif key == curses.KEY_DOWN:
                     listen_start_idx = min(listen_start_idx + 1, len(listening_connections) - max_lines)
                 elif key == ord('q'):
-                    return 5  # To quit the program
+                    return 5, selected_option  # To quit the program
                 elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                    return 0  # Navigate back to the main menu
+                    return 0, selected_option  # Navigate back to the main menu
             elif selected_option == 4:
                 if key == curses.KEY_UP:
                     proc_selected_idx = max(proc_selected_idx - 1, 0)
@@ -299,9 +299,9 @@ def main_screen(stdscr, selected_option):
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
                 elif key == ord('q'):
-                    return 5  # To quit the program
+                    return 5, selected_option  # To quit the program
                 elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                    return 0  # Navigate back to the main menu
+                    return 0, selected_option  # Navigate back to the main menu
             elif selected_option == 3:
                 if active_section == "ESTABLISHED":
                     if key == curses.KEY_UP:
@@ -309,9 +309,9 @@ def main_screen(stdscr, selected_option):
                     elif key == curses.KEY_DOWN:
                         est_start_idx = min(est_start_idx + 1, len(established_connections) - max_lines // 2)
                     elif key == ord('q'):
-                        return 5  # To quit the program
+                        return 5, selected_option  # To quit the program
                     elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                        return 0  # Navigate back to the main menu
+                        return 0, selected_option  # Navigate back to the main menu
                     elif key == ord('\t'):
                         active_section = "LISTEN"
                 elif active_section == "LISTEN":
@@ -320,15 +320,15 @@ def main_screen(stdscr, selected_option):
                     elif key == curses.KEY_DOWN:
                         listen_start_idx = min(listen_start_idx + 1, len(listening_connections) - max_lines // 2)
                     elif key == ord('q'):
-                        return 5  # To quit the program
+                        return 5, selected_option  # To quit the program
                     elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                        return 0  # Navigate back to the main menu
+                        return 0, selected_option  # Navigate back to the main menu
                     elif key == ord('\t'):
                         active_section = "ESTABLISHED"
             elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                return 0  # Navigate back to the main menu
+                return 0, selected_option  # Navigate back to the main menu
             elif key == ord('q'):
-                return 5  # To quit the program
+                return 5, selected_option  # To quit the program
         except curses.error:
             pass
         except Exception as e:
@@ -342,9 +342,12 @@ def main(stdscr):
         selected_option = splash_screen(stdscr, selected_option)
         if selected_option == 5:
             break
-        selected_option = main_screen(stdscr, selected_option)
-        if selected_option == 5:
-            break
+        result = main_screen(stdscr, selected_option)
+        if isinstance(result, tuple):
+            if result[0] == 0:
+                selected_option = result[1]
+            elif result[0] == 5:
+                break
 
 if __name__ == "__main__":
     os.environ.setdefault('ESCDELAY', '25')
