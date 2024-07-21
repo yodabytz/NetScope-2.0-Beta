@@ -38,13 +38,14 @@ NetScope is a powerful network and process monitoring tool inspired by `htop`. I
     sudo chmod +x /usr/bin/netscope
     ```
 
-## Usage
+## Usage:
 
 Run the tool by typing:
 ```sh
 netscope
+```
 
-## Controls
+## Controls:
 ```Menu Navigation:
 
 Up/Down Arrows or k/j: Navigate through the menu options.
@@ -66,7 +67,8 @@ Running Processes Screen:
 Up/Down Arrows or k/j: Scroll through the list of processes.
 k: Kill the selected process.
 Left Arrow or Backspace: Return to the main menu.
-q: Quit the application.```
+q: Quit the application.
+```
 
 ## License
 ```This project is licensed under the MIT License. See the LICENSE file for details.```
