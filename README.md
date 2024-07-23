@@ -10,6 +10,7 @@ NetScope is a powerful network and process monitoring tool inspired by `htop`. I
 - **Running Processes**: View and interact with running processes. Highlight and kill processes using simple keyboard controls.
 - **Smooth Scrolling**: Efficient and smooth scrolling through lists of connections and processes.
 - **Interactive Commands**: Navigate and interact with the application using intuitive keyboard commands.
+- **Mac OSX Support**: This lastest version now has Mac OSX support (Tested on Intel Chip)
 
 ## Installation
 
