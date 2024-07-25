@@ -10,15 +10,15 @@ def get_process_name(pid):
     try:
         process = psutil.Process(pid)
         return process.name()[:20]  # Limit the process name length to 20 characters
-    except psutil.NoSuchProcess:
-        return None
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown"
 
 def get_process_user(pid):
     try:
         process = psutil.Process(pid)
         return process.username()[:15]  # Limit the user name length to 15 characters
-    except psutil.NoSuchProcess:
-        return None
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return "Unknown"
 
 def format_size(bytes):
     if bytes is None:
@@ -44,25 +44,28 @@ def get_connections(status_filter):
 def get_all_processes():
     processes = []
     for proc in psutil.process_iter(['pid', 'name', 'username', 'nice', 'memory_info', 'memory_percent', 'cpu_percent', 'cpu_times', 'status']):
-        pid = str(proc.info['pid']).ljust(8)
-        user = (proc.info['username'][:15] if proc.info['username'] else "N/A").ljust(15)  # Limit the user name length to 15 characters
-        nice = str(proc.info['nice']).ljust(8) if proc.info['nice'] is not None else "N/A".ljust(8)
-        memory_info = proc.info['memory_info']
-        memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(8) if proc.info['memory_percent'] else "N/A".ljust(8)
-        cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(8) if proc.info['cpu_percent'] is not None else "0.0".ljust(8)
-        status = proc.info['status'].ljust(8) if proc.info['status'] else "N/A".ljust(8)
-        virt = format_size(memory_info.vms).ljust(12) if memory_info else "N/A".ljust(12)
-        res = format_size(memory_info.rss).ljust(12) if memory_info else "N/A".ljust(12)
+        try:
+            pid = str(proc.info['pid']).ljust(8)
+            user = (proc.info['username'][:15] if proc.info['username'] else "N/A").ljust(15)  # Limit the user name length to 15 characters
+            nice = str(proc.info['nice']).ljust(8) if proc.info['nice'] is not None else "N/A".ljust(8)
+            memory_info = proc.info['memory_info']
+            memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(8) if proc.info['memory_percent'] else "N/A".ljust(8)
+            cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(8) if proc.info['cpu_percent'] is not None else "0.0".ljust(8)
+            status = proc.info['status'].ljust(8) if proc.info['status'] else "N/A".ljust(8)
+            virt = format_size(memory_info.vms).ljust(12) if memory_info else "N/A".ljust(12)
+            res = format_size(memory_info.rss).ljust(12) if memory_info else "N/A".ljust(12)
 
-        # SHR field fix for Mac
-        if platform.system() == "Darwin":
-            shr = "N/A".ljust(12)  # macOS does not provide shared memory info
-        else:
-            shr = format_size(getattr(memory_info, 'shared', None)).ljust(12) if memory_info else "N/A".ljust(12)
+            # SHR field fix for Mac
+            if platform.system() == "Darwin":
+                shr = "N/A".ljust(12)  # macOS does not provide shared memory info
+            else:
+                shr = format_size(getattr(memory_info, 'shared', None)).ljust(12) if memory_info else "N/A".ljust(12)
 
-        cpu_time = f"{proc.info['cpu_times'].user:.2f}".ljust(10) if proc.info['cpu_times'] else "N/A".ljust(10)
-        command = proc.info['name'][:40].ljust(40) if proc.info['name'] else "N/A".ljust(40)  # Limit command length to 40 characters
-        processes.append([pid, user, nice, virt, res, shr, status, cpu_percent, memory_percent, cpu_time, command])
+            cpu_time = f"{proc.info['cpu_times'].user:.2f}".ljust(10) if proc.info['cpu_times'] else "N/A".ljust(10)
+            command = proc.info['name'][:40].ljust(40) if proc.info['name'] else "N/A".ljust(40)  # Limit command length to 40 characters
+            processes.append([pid, user, nice, virt, res, shr, status, cpu_percent, memory_percent, cpu_time, command])
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
     return processes
 
 def draw_table(window, title, connections, start_y, start_x, width, start_idx, max_lines, active):
@@ -231,9 +234,9 @@ def main_screen(stdscr, selected_option):
                 pid = int(pid_str)
                 try:
                     p = psutil.Process(pid)
-                    io_data[pid] = {'sent': getattr(p, 'io_counters', lambda: None)().write_bytes if hasattr(p, 'io_counters') else 0, 
-                                    'recv': getattr(p, 'io_counters', lambda: None)().read_bytes if hasattr(p, 'io_counters') else 0}
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    io_data[pid] = {'sent': p.io_counters().write_bytes if hasattr(p, 'io_counters') else 0, 
+                                    'recv': p.io_counters().read_bytes if hasattr(p, 'io_counters') else 0}
+                except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
                     io_data[pid] = {'sent': 0, 'recv': 0}
 
         buffer.erase()
