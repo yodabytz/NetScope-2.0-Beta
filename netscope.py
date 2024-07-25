@@ -11,14 +11,14 @@ def get_process_name(pid):
         process = psutil.Process(pid)
         return process.name()[:20]  # Limit the process name length to 20 characters
     except (psutil.NoSuchProcess, psutil.AccessDenied):
-        return "Unknown"
+        return None
 
 def get_process_user(pid):
     try:
         process = psutil.Process(pid)
         return process.username()[:15]  # Limit the user name length to 15 characters
     except (psutil.NoSuchProcess, psutil.AccessDenied):
-        return "Unknown"
+        return None
 
 def format_size(bytes):
     if bytes is None:
@@ -35,7 +35,7 @@ def get_connections(status_filter):
             laddr = f"{conn.laddr.ip}:{conn.laddr.port}".replace('::ffff:', '').ljust(25)
             raddr = f"{conn.raddr.ip}:{conn.raddr.port}".replace('::ffff:', '').ljust(25) if conn.raddr else "".ljust(25)
             status = conn.status.ljust(12)
-            pid = str(conn.pid).ljust(8) if conn.pid else "0".ljust(8)
+            pid = str(conn.pid).ljust(8) if conn.pid else "None".ljust(8)
             program = get_process_name(conn.pid).ljust(20) if conn.pid else "".ljust(20)
             user = get_process_user(conn.pid).ljust(15) if conn.pid else "".ljust(15)
             connections.append([laddr, raddr, status, pid, program, user])
@@ -47,25 +47,25 @@ def get_all_processes():
         try:
             pid = str(proc.info['pid']).ljust(8)
             user = (proc.info['username'][:15] if proc.info['username'] else "N/A").ljust(15)  # Limit the user name length to 15 characters
-            nice = str(proc.info['nice']).ljust(8) if proc.info['nice'] is not None else "N/A".ljust(8)
+            nice = str(proc.info['nice']).ljust(5) if proc.info['nice'] is not None else "N/A".ljust(5)
             memory_info = proc.info['memory_info']
-            memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(8) if proc.info['memory_percent'] else "N/A".ljust(8)
-            cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(8) if proc.info['cpu_percent'] is not None else "0.0".ljust(8)
-            status = proc.info['status'].ljust(8) if proc.info['status'] else "N/A".ljust(8)
-            virt = format_size(memory_info.vms).ljust(12) if memory_info else "N/A".ljust(12)
-            res = format_size(memory_info.rss).ljust(12) if memory_info else "N/A".ljust(12)
+            memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(6) if proc.info['memory_percent'] else "N/A".ljust(6)
+            cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(6) if proc.info['cpu_percent'] is not None else "0.0".ljust(6)
+            status = proc.info['status'].ljust(6) if proc.info['status'] else "N/A".ljust(6)
+            virt = format_size(memory_info.vms).ljust(10) if memory_info else "N/A".ljust(10)
+            res = format_size(memory_info.rss).ljust(10) if memory_info else "N/A".ljust(10)
 
             # SHR field fix for Mac
             if platform.system() == "Darwin":
-                shr = "N/A".ljust(12)  # macOS does not provide shared memory info
+                shr = "N/A".ljust(10)  # macOS does not provide shared memory info
             else:
-                shr = format_size(getattr(memory_info, 'shared', None)).ljust(12) if memory_info else "N/A".ljust(12)
+                shr = format_size(getattr(memory_info, 'shared', None)).ljust(10) if memory_info else "N/A".ljust(10)
 
-            cpu_time = f"{proc.info['cpu_times'].user:.2f}".ljust(10) if proc.info['cpu_times'] else "N/A".ljust(10)
-            command = proc.info['name'][:40].ljust(40) if proc.info['name'] else "N/A".ljust(40)  # Limit command length to 40 characters
+            cpu_time = f"{proc.info['cpu_times'].user:.2f}".ljust(8) if proc.info['cpu_times'] else "N/A".ljust(8)
+            command = proc.info['name'][:20].ljust(20) if proc.info['name'] else "N/A".ljust(20)  # Limit command length to 20 characters
             processes.append([pid, user, nice, virt, res, shr, status, cpu_percent, memory_percent, cpu_time, command])
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
+        except (psutil.NoSuchProcess, psutil.AccessDenied, KeyError) as e:
+            processes.append([str(proc.info.get('pid', 'N/A')).ljust(8), "N/A".ljust(15), "N/A".ljust(5), "N/A".ljust(10), "N/A".ljust(10), "N/A".ljust(10), "N/A".ljust(6), "0.0".ljust(6), "N/A".ljust(6), "N/A".ljust(8), "N/A".ljust(20)])
     return processes
 
 def draw_table(window, title, connections, start_y, start_x, width, start_idx, max_lines, active):
@@ -93,12 +93,12 @@ def draw_process_table(window, title, processes, start_y, start_x, start_idx, ma
 
     window.addstr(start_y, start_x, title, title_color)
     headers = ["PID", "USER", "NI", "VIRT", "RES", "SHR", "STATUS", "CPU%", "MEM%", "TIME+", "Command"]
-    headers_text = f'{headers[0]:<8}{headers[1]:<15}{headers[2]:<8}{headers[3]:<12}{headers[4]:<12}{headers[5]:<12}{headers[6]:<10}{headers[7]:<8}{headers[8]:<8}{headers[9]:<10}{headers[10]:<40}'
+    headers_text = f'{headers[0]:<8}{headers[1]:<15}{headers[2]:<5}{headers[3]:<10}{headers[4]:<10}{headers[5]:<10}{headers[6]:<6}{headers[7]:<6}{headers[8]:<6}{headers[9]:<8}{headers[10]:<20}'
     window.addstr(start_y + 1, start_x, headers_text[:table_width], header_color)
 
     for i, proc in enumerate(processes[start_idx:start_idx + max_lines]):
         color = selected_color if i + start_idx == selected_idx else text_color
-        window.addstr(start_y + 2 + i, start_x, f'{proc[0]:<8}{proc[1]:<15}{proc[2]:<8}{proc[3]:<12}{proc[4]:<12}{proc[5]:<12}{proc[6]:<10}{proc[7]:<8}{proc[8]:<8}{proc[9]:<10}{proc[10]:<40}'[:table_width], color)
+        window.addstr(start_y + 2 + i, start_x, f'{proc[0]:<8}{proc[1]:<15}{proc[2]:<5}{proc[3]:<10}{proc[4]:<10}{proc[5]:<10}{proc[6]:<6}{proc[7]:<6}{proc[8]:<6}{proc[9]:<8}{proc[10]:<20}'[:table_width], color)
 
 def splash_screen(stdscr, selected=0):
     curses.start_color()
@@ -142,7 +142,7 @@ def splash_screen(stdscr, selected=0):
 
     stdscr.addstr(1, title_x, title, curses.color_pair(2) | curses.A_BOLD)
     for i, line in enumerate(ascii_art):
-        stdscr.addstr(ascii_start_y + i, (max_x - len(line)) // 2, line, curses.color_pair(2))
+        stdscr.addstr(ascii_start_y + i, (max_x - len(line)) // 2, line, curses.color_pair(2) | curses.A_BOLD)
 
     stdscr.addstr(prompt_y, prompt_x, prompt, curses.color_pair(2))
 
@@ -194,7 +194,7 @@ def main_screen(stdscr, selected_option):
     proc_start_idx = 0
     proc_selected_idx = 0
     active_section = "ESTABLISHED"
-    stdscr.timeout(500)
+    stdscr.timeout(1000)  # Increase timeout to reduce CPU usage
 
     established_connections = []
     listening_connections = []
@@ -203,9 +203,13 @@ def main_screen(stdscr, selected_option):
     # Adjusted minimum width for Both screen
     min_width = 135
 
-    def update_display():
-        nonlocal established_connections, listening_connections, processes
+    def fetch_connections():
+        return get_connections('ESTABLISHED'), get_connections('LISTEN')
 
+    def fetch_processes():
+        return get_all_processes()
+
+    def update_display(established_connections, listening_connections, processes):
         max_y, max_x = stdscr.getmaxyx()
 
         if max_x < min_width:
@@ -220,24 +224,19 @@ def main_screen(stdscr, selected_option):
         buffer.bkgd(curses.color_pair(1))
         buffer.erase()
 
-        if selected_option in [1, 3]:
-            established_connections = get_connections('ESTABLISHED')
-        if selected_option in [2, 3]:
-            listening_connections = get_connections('LISTEN')
-        if selected_option == 4:
-            processes = get_all_processes()
-
         io_data = {}
         for conn in established_connections + listening_connections:
-            pid_str = conn[3].strip()
-            if pid_str.isdigit():
-                pid = int(pid_str)
-                try:
-                    p = psutil.Process(pid)
-                    io_data[pid] = {'sent': p.io_counters().write_bytes if hasattr(p, 'io_counters') else 0, 
-                                    'recv': p.io_counters().read_bytes if hasattr(p, 'io_counters') else 0}
-                except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
-                    io_data[pid] = {'sent': 0, 'recv': 0}
+            pid = conn[3].strip()
+            if pid and pid.isdigit():
+                pid = int(pid)
+                if pid not in io_data:
+                    if platform.system() != "Darwin":
+                        try:
+                            p = psutil.Process(pid)
+                            io_counters = p.io_counters()
+                            io_data[pid] = {'sent': io_counters.write_bytes, 'recv': io_counters.read_bytes}
+                        except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
+                            io_data[pid] = {'sent': 0, 'recv': 0}
 
         buffer.erase()
         buffer.bkgd(curses.color_pair(1))
@@ -276,7 +275,12 @@ def main_screen(stdscr, selected_option):
             if selected_option == 5:
                 break
 
-            update_display()
+            if selected_option in [1, 2, 3]:
+                established_connections, listening_connections = fetch_connections()
+            if selected_option == 4:
+                processes = fetch_processes()
+
+            update_display(established_connections, listening_connections, processes)
             stdscr.refresh()
 
             max_y, max_x = stdscr.getmaxyx()
@@ -289,18 +293,18 @@ def main_screen(stdscr, selected_option):
                 elif key == curses.KEY_DOWN:
                     est_start_idx = min(est_start_idx + 1, len(established_connections) - max_lines)
                 elif key == ord('q'):
-                    return 5  # To quit the program
+                    return 5, selected_option  # To quit the program
                 elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                    return 0  # Navigate back to the main menu
+                    return 0, selected_option  # Navigate back to the main menu
             elif selected_option == 2:
                 if key == curses.KEY_UP:
                     listen_start_idx = max(listen_start_idx - 1, 0)
                 elif key == curses.KEY_DOWN:
                     listen_start_idx = min(listen_start_idx + 1, len(listening_connections) - max_lines)
                 elif key == ord('q'):
-                    return 5  # To quit the program
+                    return 5, selected_option  # To quit the program
                 elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                    return 0  # Navigate back to the main menu
+                    return 0, selected_option  # Navigate back to the main menu
             elif selected_option == 4:
                 if key == curses.KEY_UP:
                     proc_selected_idx = max(proc_selected_idx - 1, 0)
@@ -314,14 +318,12 @@ def main_screen(stdscr, selected_option):
                     try:
                         pid = int(processes[proc_selected_idx][0].strip())
                         psutil.Process(pid).terminate()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
-                        stdscr.addstr(0, 0, f"Error killing process {pid}: {e}", curses.color_pair(2) | curses.A_BOLD)
-                        stdscr.refresh()
-                        time.sleep(1)
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        pass
                 elif key == ord('q'):
-                    return 5  # To quit the program
+                    return 5, selected_option  # To quit the program
                 elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                    return 0  # Navigate back to the main menu
+                    return 0, selected_option  # Navigate back to the main menu
             elif selected_option == 3:
                 if active_section == "ESTABLISHED":
                     if key == curses.KEY_UP:
@@ -329,9 +331,9 @@ def main_screen(stdscr, selected_option):
                     elif key == curses.KEY_DOWN:
                         est_start_idx = min(est_start_idx + 1, len(established_connections) - max_lines // 2)
                     elif key == ord('q'):
-                        return 5  # To quit the program
+                        return 5, selected_option  # To quit the program
                     elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                        return 0  # Navigate back to the main menu
+                        return 0, selected_option  # Navigate back to the main menu
                     elif key == ord('\t'):
                         active_section = "LISTEN"
                 elif active_section == "LISTEN":
@@ -340,19 +342,17 @@ def main_screen(stdscr, selected_option):
                     elif key == curses.KEY_DOWN:
                         listen_start_idx = min(listen_start_idx + 1, len(listening_connections) - max_lines // 2)
                     elif key == ord('q'):
-                        return 5  # To quit the program
+                        return 5, selected_option  # To quit the program
                     elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                        return 0  # Navigate back to the main menu
+                        return 0, selected_option  # Navigate back to the main menu
                     elif key == ord('\t'):
                         active_section = "ESTABLISHED"
             elif key in [curses.KEY_BACKSPACE, curses.KEY_LEFT, 127]:
-                return 0  # Navigate back to the main menu
+                return 0, selected_option  # Navigate back to the main menu
             elif key == ord('q'):
-                return 5  # To quit the program
-        except curses.error as e:
-            stdscr.addstr(0, 0, f"Curses error: {e}", curses.color_pair(2) | curses.A_BOLD)
-            stdscr.refresh()
-            time.sleep(1)
+                return 5, selected_option  # To quit the program
+        except curses.error:
+            pass
         except Exception as e:
             stdscr.addstr(0, 0, f"Error: {e}", curses.color_pair(2) | curses.A_BOLD)
             stdscr.refresh()
@@ -364,9 +364,12 @@ def main(stdscr):
         selected_option = splash_screen(stdscr, selected_option)
         if selected_option == 5:
             break
-        selected_option = main_screen(stdscr, selected_option)
-        if selected_option == 5:
-            break
+        result = main_screen(stdscr, selected_option)
+        if isinstance(result, tuple):
+            if result[0] == 0:
+                selected_option = result[1]
+            elif result[0] == 5:
+                break
 
 if __name__ == "__main__":
     os.environ.setdefault('ESCDELAY', '25')
