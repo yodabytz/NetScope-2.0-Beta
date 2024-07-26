@@ -51,7 +51,7 @@ def get_all_processes():
             memory_info = proc.info['memory_info']
             memory_percent = f"{proc.info['memory_percent']:.1f}".ljust(6) if proc.info['memory_percent'] else "N/A".ljust(6)
             cpu_percent = f"{proc.info['cpu_percent']:.1f}".ljust(6) if proc.info['cpu_percent'] is not None else "0.0".ljust(6)
-            status = proc.info['status'].ljust(6) if proc.info['status'] else "N/A".ljust(6)
+            status = proc.info['status'].ljust(8) if proc.info['status'] else "N/A".ljust(8)
             virt = format_size(memory_info.vms).ljust(10) if memory_info else "N/A".ljust(10)
             res = format_size(memory_info.rss).ljust(10) if memory_info else "N/A".ljust(10)
 
@@ -65,13 +65,15 @@ def get_all_processes():
             command = proc.info['name'][:20].ljust(20) if proc.info['name'] else "N/A".ljust(20)  # Limit command length to 20 characters
             processes.append([pid, user, nice, virt, res, shr, status, cpu_percent, memory_percent, cpu_time, command])
         except (psutil.NoSuchProcess, psutil.AccessDenied, KeyError) as e:
-            processes.append([str(proc.info.get('pid', 'N/A')).ljust(8), "N/A".ljust(15), "N/A".ljust(5), "N/A".ljust(10), "N/A".ljust(10), "N/A".ljust(10), "N/A".ljust(6), "0.0".ljust(6), "N/A".ljust(6), "N/A".ljust(8), "N/A".ljust(20)])
+            processes.append([str(proc.info.get('pid', 'N/A')).ljust(8), "N/A".ljust(15), "N/A".ljust(5), "N/A".ljust(10), "N/A".ljust(10), "N/A".ljust(10), "N/A".ljust(8), "0.0".ljust(6), "N/A".ljust(6), "N/A".ljust(8), "N/A".ljust(20)])
     return processes
 
 def draw_table(window, title, connections, start_y, start_x, width, start_idx, max_lines, active):
     title_color = curses.color_pair(2) | curses.A_BOLD if active else curses.color_pair(2)
     header_color = curses.color_pair(4)
     text_color = curses.color_pair(1)
+
+    start_x += 1  # Add a left margin
 
     window.addstr(start_y, start_x, title, title_color)
     headers = ["Local Address", "Remote Address", "Status", "PID", "Program", "User", "Data Sent", "Data Recv"]
@@ -87,18 +89,20 @@ def draw_process_table(window, title, processes, start_y, start_x, start_idx, ma
     text_color = curses.color_pair(1)
     selected_color = curses.color_pair(2) | curses.A_REVERSE
 
+    start_x += 1  # Add a left margin
+
     max_y, max_x = window.getmaxyx()
     margin = 15
     table_width = max_x - margin
 
     window.addstr(start_y, start_x, title, title_color)
     headers = ["PID", "USER", "NI", "VIRT", "RES", "SHR", "STATUS", "CPU%", "MEM%", "TIME+", "Command"]
-    headers_text = f'{headers[0]:<8}{headers[1]:<15}{headers[2]:<5}{headers[3]:<10}{headers[4]:<10}{headers[5]:<10}{headers[6]:<6}{headers[7]:<6}{headers[8]:<6}{headers[9]:<8}{headers[10]:<20}'
+    headers_text = f'{headers[0]:<8}{headers[1]:<15}{headers[2]:<5}{headers[3]:<10}{headers[4]:<10}{headers[5]:<10}{headers[6]:<8} {headers[7]:<6}{headers[8]:<6}{headers[9]:<8} {headers[10]:<20}'
     window.addstr(start_y + 1, start_x, headers_text[:table_width], header_color)
 
     for i, proc in enumerate(processes[start_idx:start_idx + max_lines]):
         color = selected_color if i + start_idx == selected_idx else text_color
-        window.addstr(start_y + 2 + i, start_x, f'{proc[0]:<8}{proc[1]:<15}{proc[2]:<5}{proc[3]:<10}{proc[4]:<10}{proc[5]:<10}{proc[6]:<6}{proc[7]:<6}{proc[8]:<6}{proc[9]:<8}{proc[10]:<20}'[:table_width], color)
+        window.addstr(start_y + 2 + i, start_x, f'{proc[0]:<8}{proc[1]:<15}{proc[2]:<5}{proc[3]:<10}{proc[4]:<10}{proc[5]:<10}{proc[6]:<8} {proc[7]:<6}{proc[8]:<6}{proc[9]:<8} {proc[10]:<20}'[:table_width], color)
 
 def splash_screen(stdscr, selected=0):
     curses.start_color()
