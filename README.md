@@ -1,6 +1,6 @@
-# NetScope 2.0 Beta (Testing)
+# NetScope 2.0r2 Beta (Testing)
 
-NetScope is a powerful network and process monitoring tool inspired by `htop`. It allows you to view established connections, listening connections, running processes, and interact with the processes, such as killing them. The tool is designed to be user-friendly and efficient, providing detailed information about your system's network and process activity. 
+NetScope is a powerful network and process monitoring tool inspired by `htop` and 'netstat`. It allows you to view established connections, listening connections, running processes, and interact with the processes, such as killing them. The tool is designed to be user-friendly and efficient, providing detailed information about your system's network and process activity. 
 
 ## Features
 
@@ -8,9 +8,10 @@ NetScope is a powerful network and process monitoring tool inspired by `htop`. I
 - **Listening Connections**: View all listening network connections.
 - **Both**: View both established and listening connections side-by-side.
 - **Running Processes**: View and interact with running processes. Highlight and kill processes using simple keyboard controls.
+- **Process Search**: Press 's' to search for running processes using wildcards, and 'n' to navigate to the next match.
 - **Smooth Scrolling**: Efficient and smooth scrolling through lists of connections and processes.
 - **Interactive Commands**: Navigate and interact with the application using intuitive keyboard commands.
-- **Mac OSX Support**: This lastest version now has Mac OSX support but needs sudo (Tested on Intel Chip)
+- **Mac OSX Support**: This latest version now has Mac OSX support but needs sudo (Tested on Intel Chip).
 
 ## Installation
 
