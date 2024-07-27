@@ -6,6 +6,45 @@ import time
 import os
 import platform
 import re
+import sys
+import argparse
+
+def show_help():
+    help_text = """
+    NetScope 2.0 - Network and Process Monitoring Tool
+
+    Usage: netscope [options]
+
+    Options:
+    -d <seconds>    Set the update interval in seconds (default is 3 seconds)
+    -h              Show this help message
+
+    Controls:
+    Menu Navigation:
+    Up/Down Arrows or k/j: Navigate through the menu options.
+    Enter or Return: Select a menu option.
+    q: Quit the application from any screen.
+
+    Established and Listening Connections Screens:
+    Up/Down Arrows or k/j: Scroll through the list of connections.
+    Left Arrow or Backspace: Return to the main menu.
+    q: Quit the application.
+
+    Both Connections Screen:
+    Tab: Switch between Established and Listening sections.
+    Up/Down Arrows or k/j: Scroll through the connections in the active section.
+    Left Arrow or Backspace: Return to the main menu.
+    q: Quit the application.
+
+    Running Processes Screen:
+    Up/Down Arrows or k/j: Scroll through the list of processes.
+    k: Kill the selected process.
+    s: Search for a process.
+    n: Find next match in search.
+    Left Arrow or Backspace: Return to the main menu.
+    q: Quit the application.
+    """
+    print(help_text)
 
 def get_process_name(pid):
     try:
@@ -230,7 +269,7 @@ def search_process(stdscr, processes, last_search_term=None, last_match_index=-1
     else:
         return matches[0], search_term
 
-def main_screen(stdscr, selected_option):
+def main_screen(stdscr, selected_option, update_interval):
     curses.start_color()
     curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
     curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLUE)
@@ -242,7 +281,7 @@ def main_screen(stdscr, selected_option):
     proc_start_idx = 0
     proc_selected_idx = 0
     active_section = "ESTABLISHED"
-    stdscr.timeout(1000)  # Increase timeout to reduce CPU usage
+    stdscr.timeout(update_interval * 1000)  # Set timeout based on update_interval
 
     established_connections = []
     listening_connections = []
@@ -415,14 +454,24 @@ def main_screen(stdscr, selected_option):
             stdscr.refresh()
             time.sleep(1)
 
-def main(stdscr):
+def main(stdscr, update_interval):
     selected_option = 0
     while True:
         selected_option = splash_screen(stdscr, selected_option)
         if selected_option == 4:
             break
-        selected_option = main_screen(stdscr, selected_option)
+        selected_option = main_screen(stdscr, selected_option, update_interval)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="NetScope 2.0 - Network and Process Monitoring Tool", add_help=False)
+    parser.add_argument("-d", type=int, default=3, help="Set the update interval in seconds (default is 3 seconds)")
+    parser.add_argument("-h", action="store_true", help="Show this help message")
+
+    args = parser.parse_args()
+
+    if args.h:
+        show_help()
+        sys.exit(0)
+
     os.environ.setdefault('ESCDELAY', '25')
-    curses.wrapper(main)
+    curses.wrapper(main, args.d)
