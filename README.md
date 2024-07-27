@@ -54,7 +54,6 @@ netscope -h
 ```
 
 ## Controls:
-
 ```
 - Up/Down Arrows or k/j: Navigate through the menu options.
 - Enter or Return: Select a menu option.
@@ -80,7 +79,8 @@ Running Processes Screen:
 - s: Search for a process using wildcards.
 - n: Find the next match for the search term.
 - Left Arrow or Backspace: Return to the main menu.
-- q: Quit the application.```
+- q: Quit the application.
+```
 
 
 ## License:
