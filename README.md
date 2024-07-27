@@ -51,30 +51,34 @@ Run the tool by typing:
 netscope
 ```
 
-## Controls:
-```Menu Navigation:
+## Menu Navigation:
 
-Up/Down Arrows or k/j: Navigate through the menu options.
-Enter or Return: Select a menu option.
-q: Quit the application from any screen.
+```- Up/Down Arrows or k/j: Navigate through the menu options.
+- Enter or Return: Select a menu option.
+- q: Quit the application from any screen.
+
 Established and Listening Connections Screens:
 
-Up/Down Arrows or k/j: Scroll through the list of connections.
-Left Arrow or Backspace: Return to the main menu.
-q: Quit the application.
+- Up/Down Arrows or k/j: Scroll through the list of connections.
+- Left Arrow or Backspace: Return to the main menu.
+- q: Quit the application.
+
 Both Connections Screen:
 
-Tab: Switch between Established and Listening sections.
-Up/Down Arrows or k/j: Scroll through the connections in the active section.
-Left Arrow or Backspace: Return to the main menu.
-q: Quit the application.
+- Tab: Switch between Established and Listening sections.
+- Up/Down Arrows or k/j: Scroll through the connections in the active section.
+- Left Arrow or Backspace: Return to the main menu.
+- q: Quit the application.
+
 Running Processes Screen:
 
-Up/Down Arrows or k/j: Scroll through the list of processes.
-k: Kill the selected process.
-Left Arrow or Backspace: Return to the main menu.
-q: Quit the application.
-```
+- Up/Down Arrows or k/j: Scroll through the list of processes.
+- k: Kill the selected process.
+- s: Search for a process using wildcards.
+- n: Find the next match for the search term.
+- Left Arrow or Backspace: Return to the main menu.
+- q: Quit the application.```
+
 
 ## License:
 ```This project is licensed under the MIT License. See the LICENSE file for details.```
@@ -84,8 +88,7 @@ q: Quit the application.
 
 ## To Do:
 ```
-1) Add more features on the running processes screen
+1) Add more features on the running processes screen (done)
 2) get CPU usage down more (fixed)
 
-If you have any feature requests, let me know
-```
+If you have any feature requests, let me know.
