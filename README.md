@@ -49,11 +49,14 @@ NetScope is a powerful network and process monitoring tool inspired by `htop` an
 Run the tool by typing:
 ```sh
 netscope
+netscope -d <seconds>
+netscope -h
 ```
 
-## Menu Navigation:
+## Controls:
 
-```- Up/Down Arrows or k/j: Navigate through the menu options.
+```
+- Up/Down Arrows or k/j: Navigate through the menu options.
 - Enter or Return: Select a menu option.
 - q: Quit the application from any screen.
 
