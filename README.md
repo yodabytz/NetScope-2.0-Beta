@@ -1,6 +1,6 @@
 # NetScope 2.0r2 Beta (Testing)
 
-NetScope is a powerful network and process monitoring tool inspired by `htop` and 'netstat`. It allows you to view established connections, listening connections, running processes, and interact with the processes, such as killing them. The tool is designed to be user-friendly and efficient, providing detailed information about your system's network and process activity. 
+NetScope is a powerful network and process monitoring tool inspired by `htop` and `netstat`. It allows you to view established connections, listening connections, running processes, and interact with the processes, such as killing them. The tool is designed to be user-friendly and efficient, providing detailed information about your system's network and process activity.
 
 ## Features
 
@@ -12,10 +12,9 @@ NetScope is a powerful network and process monitoring tool inspired by `htop` an
 - **Smooth Scrolling**: Efficient and smooth scrolling through lists of connections and processes.
 - **Interactive Commands**: Navigate and interact with the application using intuitive keyboard commands.
 - **Mac OSX Support**: This latest version now has Mac OSX support but needs sudo (Tested on Intel Chip).
+- **Enhanced System Info**: Displays detailed system information including OS, Host, Kernel, Uptime, Packages, Shell, Resolution, Terminal, CPU, GPU, and Memory.
 
-## Installation
-
-### Requirements
+## Requirements
 
 - Python 3.x
 - `psutil` library
@@ -38,10 +37,17 @@ NetScope is a powerful network and process monitoring tool inspired by `htop` an
     pip install psutil
     ```
 
-3. **Move the Script to /usr/bin**:
+3. **Create Directories and Move Files**:
+    ```sh
+    sudo mkdir -p /etc/netscope
+    sudo cp ascii_art.py /etc/netscope/
+    ```
+
+4. **Move the Script to /usr/bin**:
     ```sh
     sudo cp netscope.py /usr/bin/netscope
     sudo chmod +x /usr/bin/netscope
+    For Mac OSX, put in /user/local/bin
     ```
 
 ## Usage:
@@ -54,8 +60,7 @@ netscope -h
 ```
 
 ## Controls:
-```
-- Up/Down Arrows or k/j: Navigate through the menu options.
+```- Up/Down Arrows or k/j: Navigate through the menu options.
 - Enter or Return: Select a menu option.
 - q: Quit the application from any screen.
 
@@ -82,16 +87,10 @@ Running Processes Screen:
 - q: Quit the application.
 ```
 
-
 ## License:
-```This project is licensed under the MIT License. See the LICENSE file for details.```
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Author:
-```NetScope 2.0 is developed by Yodabytz. Contributions and feedback are welcome!```
+NetScope 2.0 is developed by Yodabytz. 
 
-## To Do:
-```
-1) Add more features on the running processes screen (done)
-2) get CPU usage down more (fixed)
-
-If you have any feature requests, let me know.
+Contributions and feedback are welcome!
