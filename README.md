@@ -57,6 +57,7 @@ Run the tool by typing:
 netscope
 netscope -d <seconds>
 netscope -h
+netscope -v
 ```
 
 ## Controls:
