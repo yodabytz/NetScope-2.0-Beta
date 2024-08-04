@@ -9,6 +9,10 @@ import re
 import sys
 import subprocess
 import argparse
+import socket
+
+# Constants
+VERSION = "2.0.04"
 
 # Load ASCII art for system info from a separate file
 ascii_art_path = '/etc/netscope/ascii_art.py'
@@ -31,14 +35,15 @@ netscope_ascii_art = [
 ]
 
 def show_help():
-    help_text = """
-    NetScope 2.0r2 - Network and Process Monitoring Tool
+    help_text = f"""
+    NetScope {VERSION} - Network and Process Monitoring Tool
 
     Usage: netscope [options]
 
     Options:
     -d <seconds>    Set the update interval in seconds (default is 3 seconds)
     -h              Show this help message
+    -v              Show version information
 
     Controls:
     Menu Navigation:
@@ -344,6 +349,35 @@ def draw_system_info(window):
     memory_used = format_size(memory.used)
     memory_total = format_size(memory.total)
 
+    # Get swap information
+    swap = psutil.swap_memory()
+    swap_used = format_size(swap.used)
+    swap_total = format_size(swap.total)
+
+    # Get disk information
+    disk_usage = psutil.disk_usage('/')
+    disk_used = format_size(disk_usage.used)
+    disk_total = format_size(disk_usage.total)
+
+    # Get local IP address and its interface
+    local_ip = "N/A"
+    main_interface = "N/A"
+    try:
+        # Check for the active network interfaces
+        for interface, addrs in psutil.net_if_addrs().items():
+            for address in addrs:
+                if address.family == socket.AF_INET and not address.address.startswith("127."):
+                    local_ip = address.address
+                    main_interface = interface
+                    break
+            if local_ip != "N/A":
+                break
+    except KeyError:
+        pass
+
+    # Get locale
+    locale_info = subprocess.check_output("locale | grep LANG=", shell=True).decode('utf-8').strip().split('=')[-1]
+
     # Select appropriate ASCII art for system
     if platform.system() == "Linux":
         try:
@@ -366,6 +400,10 @@ def draw_system_info(window):
         ("CPU:", cpu_info),
         ("GPU:", gpu_text),  # Truncated GPU info
         ("Memory:", f"{memory_used} / {memory_total}"),
+        ("Swap:", f"{swap_used} / {swap_total}"),
+        ("Disk (/):", f"{disk_used} / {disk_total}"),
+        (f"Local IP ({main_interface}):", local_ip),
+        ("Locale:", locale_info),
     ]
 
     max_y, max_x = window.getmaxyx()
@@ -630,14 +668,19 @@ def main(stdscr, update_interval):
         selected_option = main_screen(stdscr, selected_option, update_interval)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="NetScope 2.0 - Network and Process Monitoring Tool", add_help=False)
+    parser = argparse.ArgumentParser(description=f"NetScope {VERSION} - Network and Process Monitoring Tool", add_help=False)
     parser.add_argument("-d", type=int, default=3, help="Set the update interval in seconds (default is 3 seconds)")
     parser.add_argument("-h", action="store_true", help="Show this help message")
+    parser.add_argument("-v", action="store_true", help="Show version information")
 
     args = parser.parse_args()
 
     if args.h:
         show_help()
+        sys.exit(0)
+
+    if args.v:
+        print(f"NetScope {VERSION}")
         sys.exit(0)
 
     os.environ.setdefault('ESCDELAY', '25')
